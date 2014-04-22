@@ -15,8 +15,7 @@
  */
 package parquet.example;
 
-import static parquet.schema.PrimitiveType.PrimitiveTypeName.BINARY;
-import static parquet.schema.PrimitiveType.PrimitiveTypeName.INT64;
+import static parquet.schema.PrimitiveType.PrimitiveTypeName.*;
 import static parquet.schema.Type.Repetition.OPTIONAL;
 import static parquet.schema.Type.Repetition.REPEATED;
 import static parquet.schema.Type.Repetition.REQUIRED;
@@ -60,6 +59,12 @@ public class Paper {
               new PrimitiveType(REPEATED, INT64, "Backward"),
               new PrimitiveType(REPEATED, INT64, "Forward")
               ));
+
+  public static final MessageType schema4 =
+          new MessageType("Document",
+              new PrimitiveType(REQUIRED, INT64, "DocId"),
+              new PrimitiveType(OPTIONAL, INT32, "Flag")
+          );
 
   public static final SimpleGroup r1 = new SimpleGroup(schema);
   public static final SimpleGroup r2 = new SimpleGroup(schema);

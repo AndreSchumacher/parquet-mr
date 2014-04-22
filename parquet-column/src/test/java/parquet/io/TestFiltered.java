@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static parquet.example.Paper.r1;
 import static parquet.example.Paper.r2;
 import static parquet.example.Paper.schema;
+import static parquet.example.Paper.schema4;
 import static parquet.filter.AndRecordFilter.and;
 import static parquet.filter.ColumnPredicates.applyFunctionToLong;
 import static parquet.filter.ColumnPredicates.applyFunctionToString;
@@ -38,6 +39,7 @@ import parquet.column.impl.ColumnWriteStoreImpl;
 import parquet.column.page.mem.MemPageStore;
 import parquet.example.data.Group;
 import parquet.example.data.GroupWriter;
+import parquet.example.data.simple.SimpleGroup;
 import parquet.example.data.simple.convert.GroupRecordConverter;
 import parquet.filter.ColumnPredicates.LongPredicateFunction;
 import parquet.filter.ColumnPredicates.PredicateFunction;
@@ -96,6 +98,38 @@ public class TestFiltered {
 
     readOne(recordReader, "r1 filtered out", r2);
 
+  }
+
+  @Test
+  public void testFilterOnOptional() {
+    MessageColumnIO columnIO =  new ColumnIOFactory(true).getColumnIO(schema4);
+    MemPageStore memPageStore = new MemPageStore(3);
+    ColumnWriteStoreImpl columns = new ColumnWriteStoreImpl(memPageStore, 800, 800, 800, false, WriterVersion.PARQUET_1_0);
+    GroupWriter groupWriter = new GroupWriter(columnIO.getRecordWriter(columns), schema4);
+
+    SimpleGroup r1 = new SimpleGroup(schema4);
+    r1.add("DocId", 1l);
+    r1.add("Flag", 7);
+    groupWriter.write(r1);
+    SimpleGroup r2 = new SimpleGroup(schema4);
+    r2.add("DocId", 2l);
+    // NO FLAG!!!
+    //r2.add("Flag", 8);
+    groupWriter.write(r2);
+    SimpleGroup r3 = new SimpleGroup(schema4);
+    r3.add("DocId", 3l);
+    r3.add("Flag", 77);
+    groupWriter.write(r3);
+
+    columns.flush();
+
+    // Get first record
+    RecordMaterializer<Group> recordConverter = new GroupRecordConverter(schema4);
+    RecordReaderImplementation<Group> recordReader = (RecordReaderImplementation<Group>)
+            columnIO.getRecordReader(memPageStore, recordConverter,
+                        column("Flag", equalTo(77)));
+
+    readOne(recordReader, "r1, r2 filtered out", r3);
   }
 
   @Test
