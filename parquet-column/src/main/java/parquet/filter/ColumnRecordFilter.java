@@ -66,6 +66,10 @@ public final class ColumnRecordFilter implements RecordFilter {
    */
   @Override
   public boolean isMatch() {
+    // first check whether the field is null in which case we consider the predicate false
+    if (filterOnColumn.getCurrentDefinitionLevel() < filterOnColumn.getDescriptor().getMaxDefinitionLevel()) {
+        return false;
+    }
     return filterPredicate.apply(filterOnColumn);
   }
 
